@@ -12,7 +12,6 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Request\Token\GetTokenRequest;
 use WechatOfficialAccountBundle\Request\WithAccountRequest;
-use Yiisoft\Json\Json;
 
 /**
  * 微信公众号请求客户端
@@ -92,7 +91,7 @@ class OfficialAccountClient extends ApiClient
 
     protected function formatResponse(RequestInterface $request, ResponseInterface $response): mixed
     {
-        $json = Json::decode($response->getContent());
+        $json = json_decode($response->getContent(), true);
         $errcode = $json['errcode'] ?? null;
         $errmsg = $json['errmsg'] ?? '微信公众号接口出错';
         if (null !== $errcode && 0 !== $errcode) {
