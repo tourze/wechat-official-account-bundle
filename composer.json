@@ -19,6 +19,7 @@
     "symfony/http-client-contracts": "^2.5 | ^3.0",
     "tourze/http-client-bundle": "0.1.*",
     "tourze/lock-service-bundle": "0.0.*",
+    "tourze/doctrine-track-bundle": "0.0.*",
     "tourze/doctrine-snowflake-bundle": "0.0.*"
   },
   "autoload": {
