@@ -1,0 +1,33 @@
+{
+  "name": "tourze/wechat-official-account-bundle",
+  "description": "公众号基础能力",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "require": {
+    "php": "^8.1",
+    "doctrine/dbal": "^4.0",
+    "doctrine/doctrine-bundle": "^2.13",
+    "doctrine/orm": "^2.20 || ^3.0",
+    "doctrine/persistence": "^3.1 || ^4",
+    "symfony/config": "^6.4",
+    "symfony/dependency-injection": "^6.4",
+    "symfony/http-kernel": "^6.4",
+    "symfony/framework-bundle": "^6.4",
+    "symfony/yaml": "^6.4 || ^7.1",
+    "tourze/http-client-bundle": "0.1.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "WechatOfficialAccountBundle\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "WechatOfficialAccountBundle\\Tests\\": "tests"
+    }
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^10.0"
+  }
+}
