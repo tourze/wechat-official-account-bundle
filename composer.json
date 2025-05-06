@@ -20,7 +20,7 @@
     "tourze/http-client-bundle": "0.1.*",
     "tourze/lock-service-bundle": "0.0.*",
     "tourze/doctrine-track-bundle": "0.1.*",
-    "tourze/doctrine-snowflake-bundle": "0.0.*"
+    "tourze/doctrine-snowflake-bundle": "0.1.*"
   },
   "autoload": {
     "psr-4": {
