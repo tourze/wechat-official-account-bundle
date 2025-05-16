@@ -23,6 +23,7 @@ use Tourze\EasyAdmin\Attribute\Filter\Filterable;
 use Tourze\EasyAdmin\Attribute\Filter\Keyword;
 use Tourze\EasyAdmin\Attribute\Permission\AsPermission;
 use Tourze\LockServiceBundle\Model\LockEntity;
+use Tourze\WechatOfficialAccountContracts\OfficialAccountInterface;
 use WechatOfficialAccountBundle\Repository\AccountRepository;
 
 #[AsPermission(title: '公众号账号')]
@@ -31,7 +32,7 @@ use WechatOfficialAccountBundle\Repository\AccountRepository;
 #[Creatable]
 #[ORM\Entity(repositoryClass: AccountRepository::class)]
 #[ORM\Table(name: 'wechat_official_account_account', options: ['comment' => '公众号账号'])]
-class Account implements \Stringable, AccessTokenAware, LockEntity
+class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAccountInterface
 {
     #[ListColumn(order: -1)]
     #[ExportColumn]
