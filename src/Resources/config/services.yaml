@@ -6,3 +6,5 @@ services:
 
   WechatOfficialAccountBundle\Repository\:
     resource: '../../Repository/'
+  WechatOfficialAccountBundle\Service\:
+    resource: '../../Service/'
