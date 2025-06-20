@@ -2,7 +2,7 @@
 
 namespace WechatOfficialAccountBundle\Tests\Entity;
 
-use DateTime;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use WechatOfficialAccountBundle\Entity\Account;
 
@@ -34,16 +34,16 @@ class AccountTest extends TestCase
         $this->account->setCreatedBy('admin');
         $this->account->setUpdatedBy('admin');
 
-        $createTime = new DateTime();
+        $createTime = new DateTimeImmutable();
         $this->account->setCreateTime($createTime);
 
-        $updateTime = new DateTime();
+        $updateTime = new DateTimeImmutable();
         $this->account->setUpdateTime($updateTime);
 
         $accessToken = 'test_access_token';
         $this->account->setAccessToken($accessToken);
 
-        $expireTime = new DateTime();
+        $expireTime = new DateTimeImmutable();
         $this->account->setAccessTokenExpireTime($expireTime);
 
         // 验证属性

@@ -2,7 +2,7 @@
 
 namespace WechatOfficialAccountBundle\Tests\Entity;
 
-use DateTime;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Entity\CallbackIP;
@@ -29,10 +29,10 @@ class CallbackIPTest extends TestCase
         $this->callbackIP->setCreatedBy('admin');
         $this->callbackIP->setUpdatedBy('admin');
         
-        $createTime = new DateTime();
+        $createTime = new DateTimeImmutable();
         $this->callbackIP->setCreateTime($createTime);
         
-        $updateTime = new DateTime();
+        $updateTime = new DateTimeImmutable();
         $this->callbackIP->setUpdateTime($updateTime);
 
         // 验证属性
