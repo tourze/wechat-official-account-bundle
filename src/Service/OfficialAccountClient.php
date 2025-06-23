@@ -2,13 +2,14 @@
 
 namespace WechatOfficialAccountBundle\Service;
 
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use HttpClientBundle\Client\ApiClient;
 use HttpClientBundle\Exception\HttpClientException;
 use HttpClientBundle\Request\RequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Contracts\HttpClient\ResponseInterface;
+use WechatOfficialAccountBundle\Entity\AccessTokenAware;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Request\Token\GetTokenRequest;
 use WechatOfficialAccountBundle\Request\WithAccountRequest;
@@ -42,15 +43,19 @@ class OfficialAccountClient extends ApiClient
     /**
      * 刷新 AccessToken
      */
-    public function refreshAccessToken(Account $account): void
+    public function refreshAccessToken(Account|AccessTokenAware $account): void
     {
+        if (!$account instanceof Account) {
+            throw new \InvalidArgumentException('Only Account instances can refresh access token');
+        }
+
         $request = new GetTokenRequest();
         $request->setAccount($account);
 
         $cacheVal = $this->request($request);
 
         $account->setAccessToken($cacheVal['access_token']);
-        $account->setAccessTokenExpireTime(Carbon::now()->addSeconds($cacheVal['expires_in'] - 10));
+        $account->setAccessTokenExpireTime(CarbonImmutable::now()->addSeconds($cacheVal['expires_in'] - 10));
 
         try {
             $this->entityManager->persist($account);

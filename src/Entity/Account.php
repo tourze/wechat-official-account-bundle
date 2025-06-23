@@ -68,7 +68,7 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
 
     public function __toString(): string
     {
-        if (!$this->getId()) {
+        if ($this->getId() === null || $this->getId() === 0) {
             return '';
         }
 

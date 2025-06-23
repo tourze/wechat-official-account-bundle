@@ -17,7 +17,7 @@ use WechatOfficialAccountBundle\Service\OfficialAccountClient;
 class OfficialAccountClientTest extends TestCase
 {
     private EntityManagerInterface|MockObject $entityManager;
-    private OfficialAccountClient $client;
+    private TestableOfficialAccountClient $client;
     private LoggerInterface|MockObject $logger;
 
     protected function setUp(): void
@@ -25,28 +25,8 @@ class OfficialAccountClientTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         
-        // 使用反射设置apiClientLogger属性
-        $this->client = new class($this->entityManager) extends OfficialAccountClient {
-            public function getRequestUrlTest(RequestInterface $request): string
-            {
-                return $this->getRequestUrl($request);
-            }
-
-            public function getRequestMethodTest(RequestInterface $request): string
-            {
-                return $this->getRequestMethod($request);
-            }
-
-            public function getRequestOptionsTest(RequestInterface $request): ?array
-            {
-                return $this->getRequestOptions($request);
-            }
-
-            public function formatResponseTest(RequestInterface $request, ResponseInterface $response): mixed
-            {
-                return $this->formatResponse($request, $response);
-            }
-        };
+        // 创建测试用的 OfficialAccountClient 子类
+        $this->client = new TestableOfficialAccountClient($this->entityManager);
         
         // 使用反射设置apiClientLogger属性
         $reflection = new \ReflectionClass(get_parent_class($this->client));
@@ -279,5 +259,31 @@ class OfficialAccountClientTest extends TestCase
 
         // 执行测试
         $this->client->formatResponseTest($request, $response);
+    }
+}
+
+/**
+ * 测试用的 OfficialAccountClient 子类，暴露 protected 方法
+ */
+class TestableOfficialAccountClient extends OfficialAccountClient
+{
+    public function getRequestUrlTest(RequestInterface $request): string
+    {
+        return $this->getRequestUrl($request);
+    }
+
+    public function getRequestMethodTest(RequestInterface $request): string
+    {
+        return $this->getRequestMethod($request);
+    }
+
+    public function getRequestOptionsTest(RequestInterface $request): ?array
+    {
+        return $this->getRequestOptions($request);
+    }
+
+    public function formatResponseTest(RequestInterface $request, ResponseInterface $response): mixed
+    {
+        return $this->formatResponse($request, $response);
     }
 } 

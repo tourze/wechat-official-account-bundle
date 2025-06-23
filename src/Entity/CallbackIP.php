@@ -35,7 +35,7 @@ class CallbackIP implements \Stringable
 
     public function __toString(): string
     {
-        if (!$this->getId()) {
+        if ($this->getId() === null || $this->getId() === '') {
             return '';
         }
 
@@ -64,9 +64,11 @@ class CallbackIP implements \Stringable
         return $this->account;
     }
 
-    public function setAccount(Account $account): self
+    public function setAccount(?Account $account): self
     {
-        $this->account = $account;
+        if ($account !== null) {
+            $this->account = $account;
+        }
 
         return $this;
     }
