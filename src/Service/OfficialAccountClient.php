@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use WechatOfficialAccountBundle\Entity\AccessTokenAware;
 use WechatOfficialAccountBundle\Entity\Account;
+use WechatOfficialAccountBundle\Exception\InvalidAccountTypeException;
 use WechatOfficialAccountBundle\Request\Token\GetTokenRequest;
 use WechatOfficialAccountBundle\Request\WithAccountRequest;
 
@@ -46,7 +47,7 @@ class OfficialAccountClient extends ApiClient
     public function refreshAccessToken(Account|AccessTokenAware $account): void
     {
         if (!$account instanceof Account) {
-            throw new \InvalidArgumentException('Only Account instances can refresh access token');
+            throw InvalidAccountTypeException::onlyAccountInstancesSupported();
         }
 
         $request = new GetTokenRequest();

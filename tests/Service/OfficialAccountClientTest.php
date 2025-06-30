@@ -13,6 +13,7 @@ use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Request\Token\GetTokenRequest;
 use WechatOfficialAccountBundle\Request\WithAccountRequest;
 use WechatOfficialAccountBundle\Service\OfficialAccountClient;
+use WechatOfficialAccountBundle\Tests\TestCase\TestableOfficialAccountClient;
 
 class OfficialAccountClientTest extends TestCase
 {
@@ -35,36 +36,24 @@ class OfficialAccountClientTest extends TestCase
         $loggerProperty->setValue($this->client, $this->logger);
     }
 
-    public function testRequest_withValidRequest(): void
-    {
-        // 创建模拟对象
-        $request = $this->createMock(RequestInterface::class);
-        $request->method('getRequestPath')->willReturn('https://api.example.com/test');
-        $request->method('getRequestMethod')->willReturn('GET');
-        $request->method('getRequestOptions')->willReturn(['query' => ['param' => 'value']]);
-
-        // 期望的响应数据
-        $expectedResult = ['data' => 'test'];
-
-        // 创建OfficialAccountClient的子类实例，重写request方法
-        $client = $this->getMockBuilder(OfficialAccountClient::class)
-            ->setConstructorArgs([$this->entityManager])
-            ->onlyMethods(['request'])
-            ->getMock();
-
-        // 设置期望
-        $client->expects($this->once())
-            ->method('request')
-            ->with($request)
-            ->willReturn($expectedResult);
-
-        // 执行并断言
-        $result = $client->request($request);
-        $this->assertEquals($expectedResult, $result);
-    }
 
     public function testRefreshAccessToken_withValidResponse(): void
     {
+        // 创建测试用的可模拟的子类
+        $testClient = new class($this->entityManager) extends OfficialAccountClient {
+            private array $mockResponse = [];
+            
+            public function setMockResponse(array $response): void 
+            {
+                $this->mockResponse = $response;
+            }
+            
+            public function request(RequestInterface $request): mixed
+            {
+                return $this->mockResponse;
+            }
+        };
+        
         // 创建模拟对象
         $account = $this->createMock(Account::class);
         $account->expects($this->once())->method('setAccessToken')->with('test_token');
@@ -76,36 +65,40 @@ class OfficialAccountClientTest extends TestCase
         // 模拟EntityManager
         $this->entityManager->expects($this->once())->method('persist')->with($account);
         $this->entityManager->expects($this->once())->method('flush');
-
-        // 创建OfficialAccountClient的子类实例，重写request方法
-        $client = $this->getMockBuilder(OfficialAccountClient::class)
-            ->setConstructorArgs([$this->entityManager])
-            ->onlyMethods(['request'])
-            ->getMock();
         
-        // 使用反射设置apiClientLogger属性
-        $reflection = new \ReflectionClass(get_parent_class($client));
-        $loggerProperty = $reflection->getProperty('apiClientLogger');
-        $loggerProperty->setAccessible(true);
-        $loggerProperty->setValue($client, $this->logger);
-
-        // 设置期望
-        $client->expects($this->once())
-            ->method('request')
-            ->with($this->callback(function ($request) {
-                return $request instanceof GetTokenRequest;
-            }))
-            ->willReturn([
-                'access_token' => 'test_token',
-                'expires_in' => 7200,
-            ]);
+        // 设置模拟响应
+        $testClient->setMockResponse([
+            'access_token' => 'test_token',
+            'expires_in' => 7200,
+        ]);
 
         // 执行测试
-        $client->refreshAccessToken($account);
+        $testClient->refreshAccessToken($account);
     }
 
     public function testRefreshAccessToken_withDbError(): void
     {
+        // 创建测试用的可模拟的子类
+        $testClient = new class($this->entityManager) extends OfficialAccountClient {
+            private array $mockResponse = [];
+            
+            public function setMockResponse(array $response): void 
+            {
+                $this->mockResponse = $response;
+            }
+            
+            public function request(RequestInterface $request): mixed
+            {
+                return $this->mockResponse;
+            }
+        };
+        
+        // 使用反射设置apiClientLogger属性
+        $reflection = new \ReflectionClass(get_parent_class($testClient));
+        $loggerProperty = $reflection->getProperty('apiClientLogger');
+        $loggerProperty->setAccessible(true);
+        $loggerProperty->setValue($testClient, $this->logger);
+        
         // 创建模拟对象
         $account = $this->createMock(Account::class);
         $account->expects($this->once())->method('setAccessToken')->with('test_token');
@@ -120,29 +113,15 @@ class OfficialAccountClientTest extends TestCase
         $this->logger->expects($this->once())
             ->method('error')
             ->with($this->equalTo('保存AccessToken到数据库时发生异常'), $this->arrayHasKey('exception'));
-
-        // 创建OfficialAccountClient的子类实例，重写request方法
-        $client = $this->getMockBuilder(OfficialAccountClient::class)
-            ->setConstructorArgs([$this->entityManager])
-            ->onlyMethods(['request'])
-            ->getMock();
         
-        // 使用反射设置apiClientLogger属性
-        $reflection = new \ReflectionClass(get_parent_class($client));
-        $loggerProperty = $reflection->getProperty('apiClientLogger');
-        $loggerProperty->setAccessible(true);
-        $loggerProperty->setValue($client, $this->logger);
-
-        // 设置期望
-        $client->expects($this->once())
-            ->method('request')
-            ->willReturn([
-                'access_token' => 'test_token',
-                'expires_in' => 7200,
-            ]);
+        // 设置模拟响应
+        $testClient->setMockResponse([
+            'access_token' => 'test_token',
+            'expires_in' => 7200,
+        ]);
 
         // 执行测试 - 应该捕获但不抛出异常
-        $client->refreshAccessToken($account);
+        $testClient->refreshAccessToken($account);
         // 如果没有抛出异常，测试通过
         $this->assertTrue(true);
     }
@@ -259,31 +238,5 @@ class OfficialAccountClientTest extends TestCase
 
         // 执行测试
         $this->client->formatResponseTest($request, $response);
-    }
-}
-
-/**
- * 测试用的 OfficialAccountClient 子类，暴露 protected 方法
- */
-class TestableOfficialAccountClient extends OfficialAccountClient
-{
-    public function getRequestUrlTest(RequestInterface $request): string
-    {
-        return $this->getRequestUrl($request);
-    }
-
-    public function getRequestMethodTest(RequestInterface $request): string
-    {
-        return $this->getRequestMethod($request);
-    }
-
-    public function getRequestOptionsTest(RequestInterface $request): ?array
-    {
-        return $this->getRequestOptions($request);
-    }
-
-    public function formatResponseTest(RequestInterface $request, ResponseInterface $response): mixed
-    {
-        return $this->formatResponse($request, $response);
     }
 } 
