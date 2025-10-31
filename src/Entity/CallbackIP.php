@@ -4,7 +4,7 @@ namespace WechatOfficialAccountBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Tourze\DoctrineSnowflakeBundle\Service\SnowflakeIdGenerator;
+use Symfony\Component\Validator\Constraints as Assert;
 use Tourze\DoctrineSnowflakeBundle\Traits\SnowflakeKeyAware;
 use Tourze\DoctrineTimestampBundle\Traits\TimestampableAware;
 use Tourze\DoctrineUserBundle\Traits\BlameableAware;
@@ -23,33 +23,33 @@ class CallbackIP implements \Stringable
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Account $account;
 
+    #[Assert\NotBlank(message: 'IP地址不能为空')]
+    #[Assert\Length(max: 20, maxMessage: 'IP地址长度不能超过 {{ limit }} 个字符')]
+    #[Assert\Ip(message: '请输入有效的IP地址')]
     #[ORM\Column(type: Types::STRING, length: 20, options: ['comment' => 'IP'])]
     private ?string $ip = null;
 
+    #[Assert\Length(max: 100, maxMessage: '备注长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(type: Types::STRING, length: 100, nullable: true, options: ['comment' => '备注'])]
     private ?string $remark = null;
 
-
     public function __toString(): string
     {
-        if ($this->getId() === null || $this->getId() === '') {
+        if (null === $this->getId() || '' === $this->getId()) {
             return '';
         }
 
-        return $this->getIp();
+        return $this->getIp() ?? '';
     }
-
 
     public function getIp(): ?string
     {
         return $this->ip;
     }
 
-    public function setIp(string $ip): self
+    public function setIp(string $ip): void
     {
         $this->ip = $ip;
-
-        return $this;
     }
 
     public function getAccount(): Account
@@ -57,13 +57,11 @@ class CallbackIP implements \Stringable
         return $this->account;
     }
 
-    public function setAccount(?Account $account): self
+    public function setAccount(?Account $account): void
     {
-        if ($account !== null) {
+        if (null !== $account) {
             $this->account = $account;
         }
-
-        return $this;
     }
 
     public function getRemark(): ?string
@@ -71,11 +69,8 @@ class CallbackIP implements \Stringable
         return $this->remark;
     }
 
-    public function setRemark(?string $remark): self
+    public function setRemark(?string $remark): void
     {
         $this->remark = $remark;
-
-        return $this;
     }
 }
-

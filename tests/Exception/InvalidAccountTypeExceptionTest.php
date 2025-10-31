@@ -2,17 +2,22 @@
 
 declare(strict_types=1);
 
-namespace WechatOfficialAccountBundle\Tests\Unit\Exception;
+namespace WechatOfficialAccountBundle\Tests\Exception;
 
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitBase\AbstractExceptionTestCase;
 use WechatOfficialAccountBundle\Exception\InvalidAccountTypeException;
 
-class InvalidAccountTypeExceptionTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(InvalidAccountTypeException::class)]
+final class InvalidAccountTypeExceptionTest extends AbstractExceptionTestCase
 {
     public function testOnlyAccountInstancesSupported(): void
     {
         $exception = InvalidAccountTypeException::onlyAccountInstancesSupported();
-        
+
         $this->assertInstanceOf(InvalidAccountTypeException::class, $exception);
         $this->assertSame('Only Account instances can refresh access token', $exception->getMessage());
     }

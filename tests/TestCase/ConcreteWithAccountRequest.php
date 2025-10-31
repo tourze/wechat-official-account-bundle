@@ -10,7 +10,10 @@ use WechatOfficialAccountBundle\Request\WithAccountRequest;
 class ConcreteWithAccountRequest extends WithAccountRequest
 {
     private string $requestPath = 'https://api.example.com/test';
+
     private ?string $requestMethod = 'GET';
+
+    /** @var array<string, mixed>|null */
     private ?array $requestOptions = null;
 
     public function getRequestPath(): string
@@ -33,13 +36,19 @@ class ConcreteWithAccountRequest extends WithAccountRequest
         $this->requestMethod = $requestMethod;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getRequestOptions(): ?array
     {
         return $this->requestOptions;
     }
 
+    /**
+     * @param array<string, mixed>|null $requestOptions
+     */
     public function setRequestOptions(?array $requestOptions): void
     {
         $this->requestOptions = $requestOptions;
     }
-} 
+}

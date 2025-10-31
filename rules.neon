@@ -1,0 +1,7 @@
+parameters:
+    # 临时禁用 CognitiveComplexity 规则以避免 PHPStan 内部错误
+    # 参考 Issue #1084 - wechat-official-account-bundle CognitiveComplexity 兼容性问题
+    ignoreErrors:
+        - '#TomasVotruba\\CognitiveComplexity\\#'
+        - '#ComplexityNodeVisitor#'
+        - '#enterNode.*PhpParser\\Node.*given#'

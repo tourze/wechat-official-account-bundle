@@ -27,6 +27,9 @@ class GetTokenRequest extends ApiRequest
         return 'https://api.weixin.qq.com/cgi-bin/token';
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getRequestOptions(): ?array
     {
         return [

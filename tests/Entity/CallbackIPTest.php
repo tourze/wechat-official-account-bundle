@@ -2,70 +2,65 @@
 
 namespace WechatOfficialAccountBundle\Tests\Entity;
 
-use DateTimeImmutable;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitDoctrineEntity\AbstractEntityTestCase;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Entity\CallbackIP;
 
-class CallbackIPTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(CallbackIP::class)]
+final class CallbackIPTest extends AbstractEntityTestCase
 {
-    private CallbackIP $callbackIP;
-
-    protected function setUp(): void
+    protected function createEntity(): CallbackIP
     {
-        $this->callbackIP = new CallbackIP();
+        return new CallbackIP();
     }
 
-    public function testGettersAndSetters(): void
+    /**
+     * @return iterable<string, array{string, mixed}>
+     */
+    public static function propertiesProvider(): iterable
     {
-        // 设置属性
-        $this->callbackIP->setIp('192.168.1.1');
-        $this->callbackIP->setRemark('测试回调IP');
-        
         $account = new Account();
         $account->setName('测试公众号');
-        $this->callbackIP->setAccount($account);
-        
-        $this->callbackIP->setCreatedBy('admin');
-        $this->callbackIP->setUpdatedBy('admin');
-        
-        $createTime = new DateTimeImmutable();
-        $this->callbackIP->setCreateTime($createTime);
-        
-        $updateTime = new DateTimeImmutable();
-        $this->callbackIP->setUpdateTime($updateTime);
 
-        // 验证属性
-        $this->assertEquals('192.168.1.1', $this->callbackIP->getIp());
-        $this->assertEquals('测试回调IP', $this->callbackIP->getRemark());
-        $this->assertSame($account, $this->callbackIP->getAccount());
-        $this->assertEquals('admin', $this->callbackIP->getCreatedBy());
-        $this->assertEquals('admin', $this->callbackIP->getUpdatedBy());
-        $this->assertSame($createTime, $this->callbackIP->getCreateTime());
-        $this->assertSame($updateTime, $this->callbackIP->getUpdateTime());
+        $createTime = new \DateTimeImmutable();
+        $updateTime = new \DateTimeImmutable();
+
+        yield 'ip' => ['ip', '192.168.1.1'];
+        yield 'remark' => ['remark', '测试回调IP'];
+        yield 'account' => ['account', $account];
+        yield 'createdBy' => ['createdBy', 'admin'];
+        yield 'updatedBy' => ['updatedBy', 'admin'];
+        yield 'createTime' => ['createTime', $createTime];
+        yield 'updateTime' => ['updateTime', $updateTime];
     }
 
     public function testToString(): void
     {
         // 设置ID和IP
+        $callbackIP = $this->createEntity();
         $reflection = new \ReflectionClass(CallbackIP::class);
         $idProperty = $reflection->getProperty('id');
         $idProperty->setAccessible(true);
-        $idProperty->setValue($this->callbackIP, '123456789');
-        
-        $this->callbackIP->setIp('192.168.1.1');
+        $idProperty->setValue($callbackIP, '123456789');
+
+        $callbackIP->setIp('192.168.1.1');
 
         // 验证__toString方法
-        $this->assertEquals('192.168.1.1', (string)$this->callbackIP);
+        $this->assertEquals('192.168.1.1', (string) $callbackIP);
     }
 
     public function testToStringWithEmptyId(): void
     {
         // 不设置ID，保持为默认值null
-        $this->callbackIP->setIp('192.168.1.1');
+        $callbackIP = $this->createEntity();
+        $callbackIP->setIp('192.168.1.1');
 
         // 验证__toString方法对于ID为null的情况
-        $this->assertEquals('', (string)$this->callbackIP);
+        $this->assertEquals('', (string) $callbackIP);
     }
 
     public function testSetAccount(): void
@@ -73,57 +68,52 @@ class CallbackIPTest extends TestCase
         // 创建账号
         $account = new Account();
         $account->setName('测试公众号');
-        
+
         // 设置账号
-        $result = $this->callbackIP->setAccount($account);
-        
-        // 验证返回值是自身，支持链式调用
-        $this->assertSame($this->callbackIP, $result);
-        
+        $callbackIP = $this->createEntity();
+        $callbackIP->setAccount($account);
+
         // 验证账号已设置
-        $this->assertSame($account, $this->callbackIP->getAccount());
+        $this->assertSame($account, $callbackIP->getAccount());
     }
 
     public function testSetIp(): void
     {
         // 设置IP
-        $result = $this->callbackIP->setIp('192.168.1.1');
-        
-        // 验证返回值是自身，支持链式调用
-        $this->assertSame($this->callbackIP, $result);
-        
+        $callbackIP = $this->createEntity();
+        $callbackIP->setIp('192.168.1.1');
+
         // 验证IP已设置
-        $this->assertEquals('192.168.1.1', $this->callbackIP->getIp());
+        $this->assertEquals('192.168.1.1', $callbackIP->getIp());
     }
 
     public function testSetRemark(): void
     {
         // 设置备注
-        $result = $this->callbackIP->setRemark('测试回调IP');
-        
-        // 验证返回值是自身，支持链式调用
-        $this->assertSame($this->callbackIP, $result);
-        
+        $callbackIP = $this->createEntity();
+        $callbackIP->setRemark('测试回调IP');
+
         // 验证备注已设置
-        $this->assertEquals('测试回调IP', $this->callbackIP->getRemark());
-        
+        $this->assertEquals('测试回调IP', $callbackIP->getRemark());
+
         // 测试null值
-        $this->callbackIP->setRemark(null);
-        $this->assertNull($this->callbackIP->getRemark());
+        $callbackIP->setRemark(null);
+        $this->assertNull($callbackIP->getRemark());
     }
 
     public function testGetId(): void
     {
         // 初始情况下ID应该为null
-        $this->assertNull($this->callbackIP->getId());
-        
+        $callbackIP = $this->createEntity();
+        $this->assertNull($callbackIP->getId());
+
         // 通过反射设置ID
         $reflection = new \ReflectionClass(CallbackIP::class);
         $idProperty = $reflection->getProperty('id');
         $idProperty->setAccessible(true);
-        $idProperty->setValue($this->callbackIP, '123456789');
-        
+        $idProperty->setValue($callbackIP, '123456789');
+
         // 验证ID
-        $this->assertEquals('123456789', $this->callbackIP->getId());
+        $this->assertEquals('123456789', $callbackIP->getId());
     }
-} 
+}

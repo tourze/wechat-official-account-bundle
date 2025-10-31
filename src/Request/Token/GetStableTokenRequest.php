@@ -27,6 +27,9 @@ class GetStableTokenRequest extends ApiRequest
         return 'https://api.weixin.qq.com/cgi-bin/stable_token';
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getRequestOptions(): ?array
     {
         return [

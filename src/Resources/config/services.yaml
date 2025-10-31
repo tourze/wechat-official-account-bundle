@@ -3,8 +3,26 @@ services:
   _defaults:
     autowire: true      # Automatically injects dependencies in your services.
     autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+    public: false
 
+  # Auto-register most services
+  WechatOfficialAccountBundle\Controller\:
+    resource: '../../Controller/'
   WechatOfficialAccountBundle\Repository\:
     resource: '../../Repository/'
   WechatOfficialAccountBundle\Service\:
     resource: '../../Service/'
+
+  # Entity Repositories with Doctrine tags
+  WechatOfficialAccountBundle\Repository\AccountRepository:
+    tags:
+      - { name: doctrine.repository_service }
+
+  WechatOfficialAccountBundle\Repository\CallbackIPRepository:
+    tags:
+      - { name: doctrine.repository_service }
+
+  # AdminMenu service with special tag
+  WechatOfficialAccountBundle\Service\AdminMenu:
+    tags:
+      - { name: 'tourze_easy_admin_menu.provider' }

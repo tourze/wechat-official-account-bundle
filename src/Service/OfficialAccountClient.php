@@ -5,25 +5,69 @@ namespace WechatOfficialAccountBundle\Service;
 use Carbon\CarbonImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use HttpClientBundle\Client\ApiClient;
-use HttpClientBundle\Exception\HttpClientException;
 use HttpClientBundle\Request\RequestInterface;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
+use Tourze\DoctrineAsyncInsertBundle\Service\AsyncInsertService;
 use WechatOfficialAccountBundle\Entity\AccessTokenAware;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Exception\InvalidAccountTypeException;
+use WechatOfficialAccountBundle\Exception\WechatHttpClientException;
 use WechatOfficialAccountBundle\Request\Token\GetTokenRequest;
 use WechatOfficialAccountBundle\Request\WithAccountRequest;
 
 /**
  * 微信公众号请求客户端
  */
+#[WithMonologChannel(channel: 'wechat_official_account')]
 #[Autoconfigure(lazy: true, public: true)]
 class OfficialAccountClient extends ApiClient
 {
     public function __construct(
+        private readonly LoggerInterface $logger,
         private readonly EntityManagerInterface $entityManager,
+        private readonly HttpClientInterface $httpClient,
+        private readonly LockFactory $lockFactory,
+        private readonly CacheInterface $cache,
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly AsyncInsertService $asyncInsertService,
     ) {
+    }
+
+    protected function getLockFactory(): LockFactory
+    {
+        return $this->lockFactory;
+    }
+
+    protected function getHttpClient(): HttpClientInterface
+    {
+        return $this->httpClient;
+    }
+
+    protected function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    protected function getCache(): CacheInterface
+    {
+        return $this->cache;
+    }
+
+    protected function getEventDispatcher(): EventDispatcherInterface
+    {
+        return $this->eventDispatcher;
+    }
+
+    protected function getAsyncInsertService(): AsyncInsertService
+    {
+        return $this->asyncInsertService;
     }
 
     public function request(RequestInterface $request): mixed
@@ -55,6 +99,18 @@ class OfficialAccountClient extends ApiClient
 
         $cacheVal = $this->request($request);
 
+        if (!is_array($cacheVal)) {
+            throw new \RuntimeException('微信接口返回数据格式错误');
+        }
+
+        if (!isset($cacheVal['access_token']) || !is_string($cacheVal['access_token'])) {
+            throw new \RuntimeException('微信接口返回的access_token格式错误');
+        }
+
+        if (!isset($cacheVal['expires_in']) || !is_int($cacheVal['expires_in'])) {
+            throw new \RuntimeException('微信接口返回的expires_in格式错误');
+        }
+
         $account->setAccessToken($cacheVal['access_token']);
         $account->setAccessTokenExpireTime(CarbonImmutable::now()->addSeconds($cacheVal['expires_in'] - 10));
 
@@ -62,7 +118,7 @@ class OfficialAccountClient extends ApiClient
             $this->entityManager->persist($account);
             $this->entityManager->flush();
         } catch (\Throwable $exception) {
-            $this->apiClientLogger?->error('保存AccessToken到数据库时发生异常', [
+            $this->logger->error('保存AccessToken到数据库时发生异常', [
                 'exception' => $exception,
             ]);
         }
@@ -90,6 +146,9 @@ class OfficialAccountClient extends ApiClient
         return $request->getRequestMethod() ?? 'POST';
     }
 
+    /**
+     * @return array<array-key, mixed>|null
+     */
     protected function getRequestOptions(RequestInterface $request): ?array
     {
         return $request->getRequestOptions();
@@ -98,10 +157,16 @@ class OfficialAccountClient extends ApiClient
     protected function formatResponse(RequestInterface $request, ResponseInterface $response): mixed
     {
         $json = json_decode($response->getContent(), true);
+
+        if (!is_array($json)) {
+            throw new WechatHttpClientException($request, $response, '微信接口返回数据格式错误');
+        }
+
         $errcode = $json['errcode'] ?? null;
-        $errmsg = $json['errmsg'] ?? '微信公众号接口出错';
+        $errmsg = is_string($json['errmsg'] ?? null) ? $json['errmsg'] : '微信公众号接口出错';
+
         if (null !== $errcode && 0 !== $errcode) {
-            throw new HttpClientException($request, $response, $errmsg);
+            throw new WechatHttpClientException($request, $response, $errmsg);
         }
 
         return $json;

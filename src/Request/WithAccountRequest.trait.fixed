@@ -1,0 +1,55 @@
+<?php
+
+namespace WechatOfficialAccountBundle\Request;
+
+use WechatOfficialAccountBundle\Entity\Account;
+
+/**
+ * 轻量级 Account 请求 Trait
+ * 避免在异常上下文中包含完整的 Entity
+ */
+trait WithAccountRequest
+{
+    private ?Account $account = null;
+    
+    // 只存储必要的账户信息，避免包含整个实体
+    private array $accountInfo = [];
+
+    public function setAccount(Account $account): self
+    {
+        $this->account = $account;
+        
+        // 提取必要信息，避免循环引用
+        $this->accountInfo = [
+            'id' => $account->getId(),
+            'app_id' => $account->getAppId(),
+            'name' => $account->getName(),
+        ];
+        
+        return $this;
+    }
+
+    public function getAccount(): ?Account
+    {
+        return $this->account;
+    }
+    
+    /**
+     * 获取用于日志和异常的账户信息
+     */
+    public function getAccountInfoForContext(): array
+    {
+        return $this->accountInfo;
+    }
+    
+    /**
+     * 序列化时只返回轻量级信息
+     */
+    public function __serialize(): array
+    {
+        return [
+            'account_info' => $this->accountInfo,
+            'class' => static::class,
+        ];
+    }
+}

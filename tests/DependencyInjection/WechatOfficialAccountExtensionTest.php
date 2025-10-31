@@ -4,28 +4,23 @@ declare(strict_types=1);
 
 namespace WechatOfficialAccountBundle\Tests\DependencyInjection;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitSymfonyUnitTest\AbstractDependencyInjectionExtensionTestCase;
 use WechatOfficialAccountBundle\DependencyInjection\WechatOfficialAccountExtension;
 
-class WechatOfficialAccountExtensionTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(WechatOfficialAccountExtension::class)]
+final class WechatOfficialAccountExtensionTest extends AbstractDependencyInjectionExtensionTestCase
 {
-    private WechatOfficialAccountExtension $extension;
-    private ContainerBuilder $container;
-
-    protected function setUp(): void
+    protected function createExtension(): WechatOfficialAccountExtension
     {
-        parent::setUp();
-
-        $this->extension = new WechatOfficialAccountExtension();
-        $this->container = new ContainerBuilder();
+        return new WechatOfficialAccountExtension();
     }
 
-    public function testLoad(): void
+    protected function getExtensionAlias(): string
     {
-        $this->extension->load([], $this->container);
-
-        // 验证配置已加载
-        self::assertNotEmpty($this->container->getDefinitions());
+        return 'wechat_official_account';
     }
 }

@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 use Tourze\DoctrineIndexedBundle\Attribute\IndexColumn;
 use Tourze\DoctrineTimestampBundle\Traits\TimestampableAware;
 use Tourze\DoctrineTrackBundle\Attribute\TrackColumn;
@@ -20,46 +21,58 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
 {
     use TimestampableAware;
     use BlameableAware;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => 'ID'])]
-    private ?int $id = 0;
+    private int $id = 0;
 
+    #[Assert\NotBlank(message: '名称不能为空')]
+    #[Assert\Length(max: 32, maxMessage: '名称长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(type: Types::STRING, length: 32, options: ['comment' => '名称'])]
     private ?string $name = null;
 
+    #[Assert\NotBlank(message: 'AppID不能为空')]
+    #[Assert\Length(max: 64, maxMessage: 'AppID长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(type: Types::STRING, length: 64, unique: true, options: ['comment' => 'AppID'])]
     private ?string $appId = null;
 
+    #[Assert\NotBlank(message: 'AppSecret不能为空')]
+    #[Assert\Length(max: 120, maxMessage: 'AppSecret长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(type: Types::STRING, length: 120, options: ['comment' => 'AppSecret'])]
     private ?string $appSecret = null;
 
+    #[Assert\Length(max: 128, maxMessage: 'TOKEN长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(type: Types::STRING, length: 128, nullable: true, options: ['comment' => '加解密TOKEN'])]
     private ?string $token = null;
 
+    #[Assert\Length(max: 100, maxMessage: 'EncodingAESKey长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(length: 100, nullable: true, options: ['comment' => 'EncodingAESKey'])]
     private ?string $encodingAesKey = null;
 
     /**
-     * @var Collection<CallbackIP>
+     * @var Collection<int, CallbackIP>
      */
     #[ORM\OneToMany(targetEntity: CallbackIP::class, mappedBy: 'account', cascade: ['persist'], orphanRemoval: true)]
     private Collection $callbackIPs;
 
+    #[Assert\Length(max: 300, maxMessage: 'AccessToken长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(length: 300, nullable: true, options: ['comment' => 'AccessToken'])]
     private ?string $accessToken = null;
 
+    #[Assert\Type(type: '\DateTimeInterface', message: 'AccessToken过期时间必须是有效的日期时间')]
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true, options: ['comment' => 'AccessToken过期时间'])]
     private ?\DateTimeInterface $accessTokenExpireTime = null;
 
+    #[Assert\Length(max: 64, maxMessage: '关联开放平台应用ID长度不能超过 {{ limit }} 个字符')]
     #[ORM\Column(length: 64, nullable: true, options: ['comment' => '关联开放平台应用'])]
     private ?string $componentAppId = null;
 
+    #[Assert\Type(type: 'bool', message: '有效性必须是布尔值')]
     #[IndexColumn]
     #[TrackColumn]
     #[ORM\Column(type: Types::BOOLEAN, nullable: true, options: ['comment' => '有效', 'default' => 0])]
     private ?bool $valid = false;
-
 
     public function __construct()
     {
@@ -68,14 +81,14 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
 
     public function __toString(): string
     {
-        if ($this->getId() === null || $this->getId() === 0) {
+        if (0 === $this->getId()) {
             return '';
         }
 
         return "{$this->getName()}({$this->getAppId()})";
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -85,11 +98,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->appId;
     }
 
-    public function setAppId(string $appId): self
+    public function setAppId(string $appId): void
     {
         $this->appId = $appId;
-
-        return $this;
     }
 
     public function getAppSecret(): ?string
@@ -97,11 +108,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->appSecret;
     }
 
-    public function setAppSecret(string $appSecret): self
+    public function setAppSecret(string $appSecret): void
     {
         $this->appSecret = $appSecret;
-
-        return $this;
     }
 
     public function getName(): ?string
@@ -109,11 +118,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): void
     {
         $this->name = $name;
-
-        return $this;
     }
 
     /**
@@ -124,17 +131,15 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->callbackIPs;
     }
 
-    public function addCallbackIP(CallbackIP $callbackIP): self
+    public function addCallbackIP(CallbackIP $callbackIP): void
     {
         if (!$this->callbackIPs->contains($callbackIP)) {
-            $this->callbackIPs[] = $callbackIP;
+            $this->callbackIPs->add($callbackIP);
             $callbackIP->setAccount($this);
         }
-
-        return $this;
     }
 
-    public function removeCallbackIP(CallbackIP $callbackIP): self
+    public function removeCallbackIP(CallbackIP $callbackIP): void
     {
         if ($this->callbackIPs->removeElement($callbackIP)) {
             // set the owning side to null (unless already changed)
@@ -142,8 +147,6 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
                 $callbackIP->setAccount(null);
             }
         }
-
-        return $this;
     }
 
     public function getToken(): ?string
@@ -151,11 +154,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->token;
     }
 
-    public function setToken(?string $token): self
+    public function setToken(?string $token): void
     {
         $this->token = $token;
-
-        return $this;
     }
 
     public function getEncodingAesKey(): ?string
@@ -163,11 +164,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->encodingAesKey;
     }
 
-    public function setEncodingAesKey(?string $encodingAesKey): self
+    public function setEncodingAesKey(?string $encodingAesKey): void
     {
         $this->encodingAesKey = $encodingAesKey;
-
-        return $this;
     }
 
     public function getAccessToken(): ?string
@@ -175,11 +174,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->accessToken;
     }
 
-    public function setAccessToken(?string $accessToken): static
+    public function setAccessToken(?string $accessToken): void
     {
         $this->accessToken = $accessToken;
-
-        return $this;
     }
 
     public function getAccessTokenExpireTime(): ?\DateTimeInterface
@@ -187,11 +184,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->accessTokenExpireTime;
     }
 
-    public function setAccessTokenExpireTime(?\DateTimeInterface $accessTokenExpireTime): static
+    public function setAccessTokenExpireTime(?\DateTimeInterface $accessTokenExpireTime): void
     {
         $this->accessTokenExpireTime = $accessTokenExpireTime;
-
-        return $this;
     }
 
     public function getComponentAppId(): ?string
@@ -199,11 +194,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->componentAppId;
     }
 
-    public function setComponentAppId(?string $componentAppId): static
+    public function setComponentAppId(?string $componentAppId): void
     {
         $this->componentAppId = $componentAppId;
-
-        return $this;
     }
 
     public function isValid(): ?bool
@@ -211,11 +204,9 @@ class Account implements \Stringable, AccessTokenAware, LockEntity, OfficialAcco
         return $this->valid;
     }
 
-    public function setValid(?bool $valid): self
+    public function setValid(?bool $valid): void
     {
         $this->valid = $valid;
-
-        return $this;
     }
 
     public function getAccessTokenKeyName(): string
