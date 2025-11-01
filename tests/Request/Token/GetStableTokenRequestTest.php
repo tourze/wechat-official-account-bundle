@@ -2,7 +2,7 @@
 
 namespace WechatOfficialAccountBundle\Tests\Request\Token;
 
-use HttpClientBundle\Tests\Request\RequestTestCase;
+use HttpClientBundle\Test\RequestTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Request\Token\GetStableTokenRequest;
