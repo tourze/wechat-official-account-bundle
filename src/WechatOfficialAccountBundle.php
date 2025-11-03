@@ -7,6 +7,7 @@ use HttpClientBundle\HttpClientBundle;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Tourze\BundleDependency\BundleDependencyInterface;
 use Tourze\DoctrineTimestampBundle\DoctrineTimestampBundle;
+use Tourze\EasyAdminMenuBundle\EasyAdminMenuBundle;
 
 class WechatOfficialAccountBundle extends Bundle implements BundleDependencyInterface
 {
@@ -16,6 +17,7 @@ class WechatOfficialAccountBundle extends Bundle implements BundleDependencyInte
             DoctrineBundle::class => ['all' => true],
             HttpClientBundle::class => ['all' => true],
             DoctrineTimestampBundle::class => ['all' => true],
+            EasyAdminMenuBundle::class => ['all' => true],
         ];
     }
 }
