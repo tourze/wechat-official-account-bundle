@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace WechatOfficialAccountBundle\Tests\Controller\Admin;
 
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Component\DomCrawler\Crawler;
 use Tourze\PHPUnitSymfonyWebTest\AbstractEasyAdminControllerTestCase;
 use WechatOfficialAccountBundle\Controller\Admin\AccountCrudController;
 use WechatOfficialAccountBundle\Entity\Account;
@@ -22,6 +25,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
         return self::getService(AccountCrudController::class);
     }
 
+    
     /** @return \Generator<string, array{string}> */
     public static function provideIndexPageHeaders(): \Generator
     {
@@ -42,9 +46,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
 
     public function testGetEntityFqcn(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // 创建测试数据，确保后续测试有Account实体可用
         $em = self::getEntityManager();
@@ -55,8 +57,8 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
             $account->setAppId('test-app-id-123');
             $account->setAppSecret('test-app-secret-456');
             $account->setValid(true);
-            $account->setCreatedBy($admin->getUserIdentifier());
-            $account->setUpdatedBy($admin->getUserIdentifier());
+            $account->setCreatedBy('admin');
+            $account->setUpdatedBy('admin');
 
             $em->persist($account);
             $em->flush();
@@ -71,9 +73,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
 
     public function testCreateNewAccount(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         $crawler = $client->request('GET', '/admin/wechat-official-account/account/new');
 
@@ -84,9 +84,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
 
     public function testAccountConfiguration(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Create test account data
         $em = self::getEntityManager();
@@ -95,8 +93,8 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
         $account->setAppId('test-app-id-123');
         $account->setAppSecret('test-app-secret-456');
         $account->setValid(true);
-        $account->setCreatedBy($admin->getUserIdentifier());
-        $account->setUpdatedBy($admin->getUserIdentifier());
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
 
         $em->persist($account);
         $em->flush();
@@ -114,9 +112,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
 
     public function testRefreshAccessTokenAction(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Create test account
         $em = self::getEntityManager();
@@ -125,8 +121,8 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
         $account->setAppId('test-app-id-123');
         $account->setAppSecret('test-app-secret-456');
         $account->setValid(true);
-        $account->setCreatedBy($admin->getUserIdentifier());
-        $account->setUpdatedBy($admin->getUserIdentifier());
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
 
         $em->persist($account);
         $em->flush();
@@ -149,9 +145,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
      */
     public function testCreateTestData(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // 创建测试数据
         $em = self::getEntityManager();
@@ -162,8 +156,8 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
             $account->setAppId('test-app-id-123');
             $account->setAppSecret('test-app-secret-456');
             $account->setValid(true);
-            $account->setCreatedBy($admin->getUserIdentifier());
-            $account->setUpdatedBy($admin->getUserIdentifier());
+            $account->setCreatedBy('admin');
+            $account->setUpdatedBy('admin');
 
             $em->persist($account);
             $em->flush();
@@ -190,9 +184,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
 
     public function testRequiredFieldValidation(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Submit form with empty required fields
         $crawler = $client->request('GET', '/admin/wechat-official-account/account/new');
@@ -207,5 +199,149 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
         // Ensure client is properly set before making assertions
         self::getClient($client);
         $this->assertResponseStatusCodeSame(422);
+    }
+
+    /**
+     * 创建测试用的Account实体
+     * 用于确保testIndexRowActionLinksShouldNotReturn500有数据可测试
+     */
+    private function createTestAccount(?KernelBrowser $client = null): Account
+    {
+        if ($client === null) {
+            $client = $this->createAuthenticatedClient();
+        }
+
+        $em = self::getEntityManager();
+
+        // 清理现有的Account实体，确保我们的测试数据是ID=1
+        $existingAccounts = $em->getRepository(Account::class)->findAll();
+        foreach ($existingAccounts as $existingAccount) {
+            $em->remove($existingAccount);
+        }
+        $em->flush();
+
+        $account = new Account();
+        $account->setName('测试公众号-IndexTest');
+        $account->setAppId('test-index-app-id-123');
+        $account->setAppSecret('test-index-app-secret-456');
+        $account->setValid(true);
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
+
+        $em->persist($account);
+        $em->flush();
+
+        // 重新获取以确认ID
+        $em->clear();
+        $savedAccount = $em->getRepository(Account::class)->findOneBy(['appId' => 'test-index-app-id-123']);
+        if ($savedAccount === null) {
+            throw new \RuntimeException('Failed to create test account');
+        }
+        return $savedAccount;
+    }
+
+    /**
+     * 该测试创建测试数据以确保基类的testIndexRowActionLinksShouldNotReturn500有数据可测试
+     */
+    public function testIndexPageShouldHaveData(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $account = $this->createTestAccount();
+
+        // 访问索引页面
+        $crawler = $client->request('GET', $this->generateAdminUrl('index'));
+
+        // 确保客户端正确设置
+        self::getClient($client);
+        $this->assertResponseIsSuccessful();
+
+        // 验证至少有一行数据
+        $rows = $crawler->filter('table tbody tr[data-id]');
+        self::assertGreaterThan(0, $rows->count(), '索引页面应该显示至少一条记录');
+
+        // 验证行动作链接存在
+        $actionLinks = $rows->first()->filter('td.actions a[href]');
+        self::assertGreaterThan(0, $actionLinks->count(), '每行应该有动作链接');
+
+        // 验证DETAIL链接可以访问
+        $detailLink = $actionLinks->filter('[title*="Show"], [title*="查看"], [title*="详情"]')->first();
+        if ($detailLink->count() > 0) {
+            $href = $detailLink->attr('href');
+            if (null !== $href && '' !== $href) {
+                $client->request('GET', $href);
+                self::assertLessThan(500, $client->getResponse()->getStatusCode(), 'DETAIL链接不应返回500错误');
+            }
+        }
+    }
+
+    /**
+     * 这个测试专门用来验证基类的testIndexRowActionLinksShouldNotReturn500能正常工作
+     * 它创建数据并手动执行基类测试的逻辑
+     */
+    public function testIndexRowActionLinksShouldWork(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $this->createTestAccount($client);
+
+        // 确保客户端正确设置
+        self::getClient($client);
+
+        // 执行基类测试的逻辑
+        $indexUrl = $this->generateAdminUrl(Action::INDEX);
+        $crawler = $client->request('GET', $indexUrl);
+        $this->assertTrue($client->getResponse()->isSuccessful(), 'Index page should be successful');
+
+        // 收集每一行里的动作按钮（a 链接）
+        $links = [];
+        foreach ($crawler->filter('table tbody tr[data-id]') as $row) {
+            $rowCrawler = new Crawler($row);
+            foreach ($rowCrawler->filter('td.actions a[href]') as $a) {
+                /** @var \DOMElement $a */
+                $href = $a->getAttribute('href');
+                if ($href === '') {
+                    continue;
+                }
+                if (str_starts_with($href, 'javascript:') || '#' === $href) {
+                    continue;
+                }
+
+                // 跳过需要 POST 的删除类动作（避免 Method Not Allowed）
+                $aCrawler = new Crawler($a);
+                $actionNameAttr = strtolower((string) ($aCrawler->attr('data-action-name') ?? $aCrawler->attr('data-action') ?? ''));
+                $text = strtolower(trim($a->textContent ?? ''));
+                $hrefLower = strtolower($href);
+                $isDelete = (
+                    'delete' === $actionNameAttr
+                    || str_contains($text, 'delete')
+                    || 1 === preg_match('#/delete(?:$|[/?\#])#i', $hrefLower)
+                    || 1 === preg_match('/(^|[?&])crudAction=delete\b/i', $hrefLower)
+                );
+                if ($isDelete) {
+                    continue; // 删除操作需要POST与CSRF，跳过
+                }
+
+                $links[] = $href;
+            }
+        }
+
+        $links = array_values(array_unique($links, SORT_STRING));
+        if (empty($links)) {
+            $this->markTestSkipped('没有动作链接，跳过');
+        }
+
+        // 逐个请求，跟随重定向并确保最终不是 500
+        foreach ($links as $href) {
+            $client->request('GET', $href);
+
+            // 跟随最多3次重定向，覆盖常见动作跳转链
+            $hops = 0;
+            while ($client->getResponse()->isRedirection() && $hops < 3) {
+                $client->followRedirect();
+                ++$hops;
+            }
+
+            $status = $client->getResponse()->getStatusCode();
+            $this->assertLessThan(500, $status, sprintf('链接 %s 最终返回了 %d', $href, $status));
+        }
     }
 }

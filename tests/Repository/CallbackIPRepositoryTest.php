@@ -13,6 +13,7 @@ use WechatOfficialAccountBundle\Entity\CallbackIP;
 use WechatOfficialAccountBundle\Repository\CallbackIPRepository;
 
 /**
+ * @template-extends AbstractRepositoryTestCase<CallbackIP>
  * @internal
  */
 #[CoversClass(CallbackIPRepository::class)]

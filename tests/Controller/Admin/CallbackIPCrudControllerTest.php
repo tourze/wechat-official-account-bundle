@@ -44,9 +44,7 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
 
     public function testGetEntityFqcn(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         $client->request('GET', '/admin');
 
@@ -57,9 +55,7 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
 
     public function testCreateNewCallbackIP(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         $crawler = $client->request('GET', '/admin/wechat-official-account/callback-ip/new');
 
@@ -70,9 +66,7 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
 
     public function testCallbackIPConfiguration(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Create test account first
         $em = self::getEntityManager();
@@ -81,8 +75,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $account->setAppId('test-app-id-123');
         $account->setAppSecret('test-app-secret-456');
         $account->setValid(true);
-        $account->setCreatedBy($admin->getUserIdentifier());
-        $account->setUpdatedBy($admin->getUserIdentifier());
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
 
         $em->persist($account);
         $em->flush();
@@ -92,8 +86,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $callbackIP->setAccount($account);
         $callbackIP->setIp('192.168.1.100');
         $callbackIP->setRemark('测试服务器IP');
-        $callbackIP->setCreatedBy($admin->getUserIdentifier());
-        $callbackIP->setUpdatedBy($admin->getUserIdentifier());
+        $callbackIP->setCreatedBy('admin');
+        $callbackIP->setUpdatedBy('admin');
 
         $em->persist($callbackIP);
         $em->flush();
@@ -111,9 +105,7 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
 
     public function testCallbackIPDetail(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Create test data
         $em = self::getEntityManager();
@@ -122,8 +114,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $account->setAppId('test-app-id-123');
         $account->setAppSecret('test-app-secret-456');
         $account->setValid(true);
-        $account->setCreatedBy($admin->getUserIdentifier());
-        $account->setUpdatedBy($admin->getUserIdentifier());
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
 
         $em->persist($account);
 
@@ -131,8 +123,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $callbackIP->setAccount($account);
         $callbackIP->setIp('192.168.1.100');
         $callbackIP->setRemark('测试服务器IP');
-        $callbackIP->setCreatedBy($admin->getUserIdentifier());
-        $callbackIP->setUpdatedBy($admin->getUserIdentifier());
+        $callbackIP->setCreatedBy('admin');
+        $callbackIP->setUpdatedBy('admin');
 
         $em->persist($callbackIP);
         $em->flush();
@@ -146,9 +138,7 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
 
     public function testRequiredFieldValidation(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Create test account first
         $em = self::getEntityManager();
@@ -157,8 +147,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $account->setAppId('test-app-id-123');
         $account->setAppSecret('test-app-secret-456');
         $account->setValid(true);
-        $account->setCreatedBy($admin->getUserIdentifier());
-        $account->setUpdatedBy($admin->getUserIdentifier());
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
 
         $em->persist($account);
         $em->flush();
@@ -169,8 +159,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $callbackIPWithEmptyIp = new CallbackIP();
         $callbackIPWithEmptyIp->setAccount($account);
         $callbackIPWithEmptyIp->setIp('');
-        $callbackIPWithEmptyIp->setCreatedBy($admin->getUserIdentifier());
-        $callbackIPWithEmptyIp->setUpdatedBy($admin->getUserIdentifier());
+        $callbackIPWithEmptyIp->setCreatedBy('admin');
+        $callbackIPWithEmptyIp->setUpdatedBy('admin');
 
         $violations = $validator->validate($callbackIPWithEmptyIp);
         $this->assertGreaterThan(0, count($violations), 'Empty IP should cause NotBlank validation violations');
@@ -189,8 +179,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $callbackIPWithInvalidIp = new CallbackIP();
         $callbackIPWithInvalidIp->setAccount($account);
         $callbackIPWithInvalidIp->setIp('not-an-ip-address');
-        $callbackIPWithInvalidIp->setCreatedBy($admin->getUserIdentifier());
-        $callbackIPWithInvalidIp->setUpdatedBy($admin->getUserIdentifier());
+        $callbackIPWithInvalidIp->setCreatedBy('admin');
+        $callbackIPWithInvalidIp->setUpdatedBy('admin');
 
         $violations = $validator->validate($callbackIPWithInvalidIp);
         $this->assertGreaterThan(0, count($violations), 'Invalid IP format should cause Ip validation violations');
@@ -209,8 +199,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $callbackIPWithLongIp = new CallbackIP();
         $callbackIPWithLongIp->setAccount($account);
         $callbackIPWithLongIp->setIp('192.168.1.100.extra.long.invalid.ip.address');
-        $callbackIPWithLongIp->setCreatedBy($admin->getUserIdentifier());
-        $callbackIPWithLongIp->setUpdatedBy($admin->getUserIdentifier());
+        $callbackIPWithLongIp->setCreatedBy('admin');
+        $callbackIPWithLongIp->setUpdatedBy('admin');
 
         $violations = $validator->validate($callbackIPWithLongIp);
         $this->assertGreaterThan(0, count($violations), 'Too long IP should cause Length validation violations');
@@ -220,8 +210,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $callbackIPWithLongRemark->setAccount($account);
         $callbackIPWithLongRemark->setIp('192.168.1.1');
         $callbackIPWithLongRemark->setRemark(str_repeat('a', 101)); // 101 chars, exceeds 100 limit
-        $callbackIPWithLongRemark->setCreatedBy($admin->getUserIdentifier());
-        $callbackIPWithLongRemark->setUpdatedBy($admin->getUserIdentifier());
+        $callbackIPWithLongRemark->setCreatedBy('admin');
+        $callbackIPWithLongRemark->setUpdatedBy('admin');
 
         $violations = $validator->validate($callbackIPWithLongRemark);
         $this->assertGreaterThan(0, count($violations), 'Too long remark should cause Length validation violations');
@@ -231,8 +221,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $validCallbackIP->setAccount($account);
         $validCallbackIP->setIp('192.168.1.100');
         $validCallbackIP->setRemark('测试服务器IP');
-        $validCallbackIP->setCreatedBy($admin->getUserIdentifier());
-        $validCallbackIP->setUpdatedBy($admin->getUserIdentifier());
+        $validCallbackIP->setCreatedBy('admin');
+        $validCallbackIP->setUpdatedBy('admin');
 
         $violations = $validator->validate($validCallbackIP);
         $this->assertCount(0, $violations, 'Valid CallbackIP should pass all validations');
@@ -248,9 +238,7 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
 
     public function testValidationErrors(): void
     {
-        $client = self::createClientWithDatabase();
-        $admin = $this->createAdminUser('admin@test.com', 'password123');
-        $this->loginAsAdmin($client, 'admin@test.com', 'password123');
+        $client = $this->createAuthenticatedClient();
 
         // Create test account first
         $em = self::getEntityManager();
@@ -259,8 +247,8 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         $account->setAppId('test-app-id-123');
         $account->setAppSecret('test-app-secret-456');
         $account->setValid(true);
-        $account->setCreatedBy($admin->getUserIdentifier());
-        $account->setUpdatedBy($admin->getUserIdentifier());
+        $account->setCreatedBy('admin');
+        $account->setUpdatedBy('admin');
 
         $em->persist($account);
         $em->flush();

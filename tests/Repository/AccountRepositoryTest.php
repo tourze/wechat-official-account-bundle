@@ -12,6 +12,7 @@ use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Repository\AccountRepository;
 
 /**
+ * @template-extends AbstractRepositoryTestCase<Account>
  * @internal
  */
 #[CoversClass(AccountRepository::class)]
