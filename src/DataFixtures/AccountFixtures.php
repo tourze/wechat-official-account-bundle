@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace WechatOfficialAccountBundle\DataFixtures;
 
 use Doctrine\Bundle\FixturesBundle\Fixture;
