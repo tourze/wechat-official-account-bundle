@@ -5,12 +5,9 @@ namespace WechatOfficialAccountBundle\DataFixtures;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\DependencyInjection\Attribute\When;
 use WechatOfficialAccountBundle\Entity\Account;
 use WechatOfficialAccountBundle\Entity\CallbackIP;
 
-#[When(env: 'test')]
-#[When(env: 'dev')]
 class CallbackIPFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void

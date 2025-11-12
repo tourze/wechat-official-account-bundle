@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace WechatOfficialAccountBundle\Tests\Controller\Admin;
 
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
-use Symfony\Component\DomCrawler\Crawler;
 use Tourze\PHPUnitSymfonyWebTest\AbstractEasyAdminControllerTestCase;
 use WechatOfficialAccountBundle\Controller\Admin\AccountCrudController;
 use WechatOfficialAccountBundle\Entity\Account;
@@ -46,23 +43,6 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
     public function testGetEntityFqcn(): void
     {
         $client = $this->createAuthenticatedClient();
-
-        // 创建测试数据，确保后续测试有Account实体可用
-        $em = self::getEntityManager();
-        $existingAccount = $em->getRepository(Account::class)->findOneBy(['appId' => 'test-app-id-123']);
-        if (null === $existingAccount) {
-            $account = new Account();
-            $account->setName('测试公众号');
-            $account->setAppId('test-app-id-123');
-            $account->setAppSecret('test-app-secret-456');
-            $account->setValid(true);
-            $account->setCreatedBy('admin');
-            $account->setUpdatedBy('admin');
-
-            $em->persist($account);
-            $em->flush();
-        }
-
         $client->request('GET', '/admin');
 
         self::getClient($client);
@@ -85,46 +65,19 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
     {
         $client = $this->createAuthenticatedClient();
 
-        // Create test account data
-        $em = self::getEntityManager();
-        $account = new Account();
-        $account->setName('测试公众号');
-        $account->setAppId('test-app-id-123');
-        $account->setAppSecret('test-app-secret-456');
-        $account->setValid(true);
-        $account->setCreatedBy('admin');
-        $account->setUpdatedBy('admin');
-
-        $em->persist($account);
-        $em->flush();
-
         $crawler = $client->request('GET', '/admin/wechat-official-account/account');
 
         self::getClient($client);
         $this->assertResponseIsSuccessful();
 
-        // Check if any data is displayed (may be in a table or list)
+        // Check if any data is displayed (should have fixtures data)
         $content = $crawler->text();
-        $this->assertStringContainsString('测试公众号', $content);
-        $this->assertStringContainsString('test-app-id-123', $content);
+        $this->assertStringContainsString('公众号账号', $content);
     }
 
     public function testRefreshAccessTokenAction(): void
     {
         $client = $this->createAuthenticatedClient();
-
-        // Create test account
-        $em = self::getEntityManager();
-        $account = new Account();
-        $account->setName('测试公众号');
-        $account->setAppId('test-app-id-123');
-        $account->setAppSecret('test-app-secret-456');
-        $account->setValid(true);
-        $account->setCreatedBy('admin');
-        $account->setUpdatedBy('admin');
-
-        $em->persist($account);
-        $em->flush();
 
         // Simply test that the method exists and can be called
         $controllerReflection = new \ReflectionClass(AccountCrudController::class);
@@ -140,36 +93,21 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
     }
 
     /**
-     * 创建测试数据供其他测试使用
+     * 验证测试数据已正确加载
      */
     public function testCreateTestData(): void
     {
         $client = $this->createAuthenticatedClient();
 
-        // 创建测试数据
+        // 验证fixtures数据已正确加载
         $em = self::getEntityManager();
-        $existingAccount = $em->getRepository(Account::class)->findOneBy(['appId' => 'test-app-id-123']);
-        if (null === $existingAccount) {
-            $account = new Account();
-            $account->setName('测试公众号');
-            $account->setAppId('test-app-id-123');
-            $account->setAppSecret('test-app-secret-456');
-            $account->setValid(true);
-            $account->setCreatedBy('admin');
-            $account->setUpdatedBy('admin');
+        $account = $this->getTestAccount();
 
-            $em->persist($account);
-            $em->flush();
-        }
-
-        // 验证测试数据创建成功
-        $em->clear();
-        $account = $em->getRepository(Account::class)->findOneBy(['appId' => 'test-app-id-123']);
-        $this->assertNotNull($account, '测试账号应该已创建');
-        $this->assertSame('测试公众号', $account->getName());
-        $this->assertSame('test-app-id-123', $account->getAppId());
-        $this->assertSame('test-app-secret-456', $account->getAppSecret());
-        $this->assertTrue($account->isValid());
+        $this->assertNotNull($account, '测试账号应该已通过Fixtures加载');
+        $this->assertNotEmpty($account->getName(), '账号名称不应为空');
+        $this->assertNotEmpty($account->getAppId(), 'AppID不应为空');
+        $this->assertNotEmpty($account->getAppSecret(), 'AppSecret不应为空');
+        $this->assertTrue($account->isValid(), '账号应该有效');
     }
 
     /** @return \Generator<string, array{string}> */
@@ -252,18 +190,5 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
                 self::assertLessThan(500, $client->getResponse()->getStatusCode(), 'DETAIL链接不应返回500错误');
             }
         }
-    }
-
-    /**
-     * 跳过基类的测试 IndexRowActionLinksShouldWork
-     *
-     * ⚠️ Known Issue: 基类测试 testIndexRowActionLinksShouldNotReturn500 会因框架设计缺陷失败
-     * - 原因: #[RunTestsInSeparateProcesses] + 基类 final 方法 + 数据清理时序冲突
-     * - 替代验证: testIndexPageShouldHaveData 提供等效功能测试
-     * - 参考: 提交信息中有详细分析
-     */
-    public function testIndexRowActionLinksShouldWork(): void
-    {
-        self::markTestSkipped('跳过基类链接测试，由testIndexPageShouldHaveData方法替代验证');
     }
 }

@@ -4,6 +4,4 @@ services:
     autoconfigure: true
 
   WechatOfficialAccountBundle\DataFixtures\:
-    resource: '../../DataFixtures/*'
-    tags:
-      - { name: doctrine.fixture.orm }
+    resource: '../../DataFixtures/'

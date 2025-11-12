@@ -6,11 +6,8 @@ namespace WechatOfficialAccountBundle\DataFixtures;
 
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\DependencyInjection\Attribute\When;
 use WechatOfficialAccountBundle\Entity\Account;
 
-#[When(env: 'test')]
-#[When(env: 'dev')]
 class AccountFixtures extends Fixture
 {
     public const ACCOUNT_REFERENCE = 'account';

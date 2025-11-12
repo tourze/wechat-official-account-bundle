@@ -10,6 +10,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
@@ -159,8 +160,11 @@ final class AccountCrudController extends AbstractCrudController
     }
 
     #[AdminAction(routePath: '{entityId}/refresh-token', routeName: 'wechat_official_account_account_refresh_token')]
-    public function refreshAccessToken(): void
+    public function refreshAccessToken(AdminContext $context): void
     {
+        // 从AdminContext获取当前实体
+        $account = $context->getEntity()->getInstance();
+
         // 这里可以调用刷新AccessToken的服务方法
         // $this->officialAccountService->refreshAccessToken($account);
         $this->addFlash('success', 'AccessToken刷新功能待实现');

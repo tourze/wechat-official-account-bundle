@@ -36,15 +36,4 @@ class AccountRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-
-    public function find(mixed $id, LockMode|int|null $lockMode = null, ?int $lockVersion = null): ?Account
-    {
-        // 如果传入的是字符串，假设是appId
-        if (is_string($id)) {
-            return $this->findOneBy(['appId' => $id]);
-        }
-
-        // 否则按正常ID查找
-        return parent::find($id, $lockMode, $lockVersion);
-    }
 }

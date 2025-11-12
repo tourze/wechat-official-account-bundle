@@ -68,90 +68,42 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
     {
         $client = $this->createAuthenticatedClient();
 
-        // Create test account first
-        $em = self::getEntityManager();
-        $account = new Account();
-        $account->setName('测试公众号');
-        $account->setAppId('test-app-id-123');
-        $account->setAppSecret('test-app-secret-456');
-        $account->setValid(true);
-        $account->setCreatedBy('admin');
-        $account->setUpdatedBy('admin');
-
-        $em->persist($account);
-        $em->flush();
-
-        // Create callback IP
-        $callbackIP = new CallbackIP();
-        $callbackIP->setAccount($account);
-        $callbackIP->setIp('192.168.1.100');
-        $callbackIP->setRemark('测试服务器IP');
-        $callbackIP->setCreatedBy('admin');
-        $callbackIP->setUpdatedBy('admin');
-
-        $em->persist($callbackIP);
-        $em->flush();
-
+        // 使用 Fixtures 提供的数据，不手动创建
+        // CallbackIPFixtures 已经创建了测试数据：127.0.0.1 和 192.168.1.1
         $crawler = $client->request('GET', '/admin/wechat-official-account/callback-ip');
 
         self::getClient($client);
         $this->assertResponseIsSuccessful();
 
-        // Check if any data is displayed (may be in a table or list)
+        // 检查 Fixtures 创建的数据是否显示
         $content = $crawler->text();
-        $this->assertStringContainsString('192.168.1.100', $content);
-        $this->assertStringContainsString('测试服务器IP', $content);
+        $this->assertStringContainsString('127.0.0.1', $content);
+        $this->assertStringContainsString('测试IP地址1', $content);
     }
 
     public function testCallbackIPDetail(): void
     {
         $client = $this->createAuthenticatedClient();
 
-        // Create test data
+        // 使用 Fixtures 提供的数据
         $em = self::getEntityManager();
-        $account = new Account();
-        $account->setName('测试公众号');
-        $account->setAppId('test-app-id-123');
-        $account->setAppSecret('test-app-secret-456');
-        $account->setValid(true);
-        $account->setCreatedBy('admin');
-        $account->setUpdatedBy('admin');
+        $callbackIP = $em->getRepository(CallbackIP::class)->findOneBy(['ip' => '127.0.0.1']);
 
-        $em->persist($account);
-
-        $callbackIP = new CallbackIP();
-        $callbackIP->setAccount($account);
-        $callbackIP->setIp('192.168.1.100');
-        $callbackIP->setRemark('测试服务器IP');
-        $callbackIP->setCreatedBy('admin');
-        $callbackIP->setUpdatedBy('admin');
-
-        $em->persist($callbackIP);
-        $em->flush();
-
-        // Verify the entity was created properly
-        $this->assertNotNull($callbackIP->getId());
-        $this->assertEquals('192.168.1.100', $callbackIP->getIp());
-        $this->assertEquals('测试服务器IP', $callbackIP->getRemark());
-        $this->assertEquals($account->getId(), $callbackIP->getAccount()->getId());
+        // 验证 Fixtures 数据已正确加载
+        $this->assertNotNull($callbackIP, 'CallbackIP fixtures 应该已加载');
+        $this->assertEquals('127.0.0.1', $callbackIP->getIp());
+        $this->assertEquals('测试IP地址1', $callbackIP->getRemark());
+        $this->assertNotNull($callbackIP->getAccount(), 'CallbackIP 应该关联到 Account');
     }
 
     public function testRequiredFieldValidation(): void
     {
         $client = $this->createAuthenticatedClient();
 
-        // Create test account first
+        // 使用 Fixtures 提供的 Account
         $em = self::getEntityManager();
-        $account = new Account();
-        $account->setName('测试公众号');
-        $account->setAppId('test-app-id-123');
-        $account->setAppSecret('test-app-secret-456');
-        $account->setValid(true);
-        $account->setCreatedBy('admin');
-        $account->setUpdatedBy('admin');
-
-        $em->persist($account);
-        $em->flush();
+        $account = $em->getRepository(Account::class)->findOneBy([]);
+        $this->assertNotNull($account, 'Account fixtures 应该已加载');
 
         $validator = self::getService(ValidatorInterface::class);
 
@@ -239,19 +191,6 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
     public function testValidationErrors(): void
     {
         $client = $this->createAuthenticatedClient();
-
-        // Create test account first
-        $em = self::getEntityManager();
-        $account = new Account();
-        $account->setName('测试公众号');
-        $account->setAppId('test-app-id-123');
-        $account->setAppSecret('test-app-secret-456');
-        $account->setValid(true);
-        $account->setCreatedBy('admin');
-        $account->setUpdatedBy('admin');
-
-        $em->persist($account);
-        $em->flush();
 
         // Test that the new form page loads successfully - this validates that:
         // 1. Required fields are properly configured in the controller
