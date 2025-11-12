@@ -20,66 +20,6 @@ use WechatOfficialAccountBundle\Entity\Account;
 #[RunTestsInSeparateProcesses]
 final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCase
 {
-    protected function afterEasyAdminSetUp(): void
-    {
-        // 为每个测试创建基础的测试数据
-        // 在数据库清理后立即重新创建，确保基类测试有足够数据
-        $this->createBaseTestData();
-    }
-
-    /**
-     * 创建基础测试数据
-     * 由于使用了 #[RunTestsInSeparateProcesses]，每个测试在独立进程中运行
-     * 需要确保每个测试都有足够的数据供基类测试使用
-     */
-    private function createBaseTestData(): void
-    {
-        $em = self::getEntityManager();
-
-        // 清理现有数据，避免ID冲突
-        $connection = $em->getConnection();
-        $platform = $connection->getDatabasePlatform();
-
-        try {
-            // 先清除 Doctrine 缓存，避免旧数据残留
-            $em->clear();
-
-            // 清空表并重置自增ID
-            $connection->executeStatement('DELETE FROM wechat_official_account_account');
-            // 检查是否是 SQLite 平台
-            $isSqlite = $platform instanceof \Doctrine\DBAL\Platforms\SQLitePlatform;
-            if (!$isSqlite) {
-                $connection->executeStatement('ALTER TABLE wechat_official_account_account AUTO_INCREMENT = 1');
-            } else {
-                // SQLite 需要删除 sqlite_sequence 表中的记录来重置自增
-                $connection->executeStatement("DELETE FROM sqlite_sequence WHERE name='wechat_official_account_account'");
-            }
-        } catch (\Throwable $e) {
-            // 忽略清理错误，可能表为空或 sqlite_sequence 不存在
-        }
-
-        // 创建至少2个测试实体，确保基类的 testIndexRowActionLinksShouldNotReturn500 有足够数据
-        $testData = [
-            ['name' => '测试公众号-1', 'appId' => 'test-app-id-1', 'appSecret' => 'test-app-secret-1'],
-            ['name' => '测试公众号-2', 'appId' => 'test-app-id-2', 'appSecret' => 'test-app-secret-2'],
-        ];
-
-        foreach ($testData as $data) {
-            $account = new Account();
-            $account->setName($data['name']);
-            $account->setAppId($data['appId']);
-            $account->setAppSecret($data['appSecret']);
-            $account->setValid(true);
-            $account->setCreatedBy('admin');
-            $account->setUpdatedBy('admin');
-
-            $em->persist($account);
-        }
-
-        $em->flush();
-        $em->clear(); // 再次清除缓存，确保查询使用最新数据
-    }
-
     protected function getControllerService(): AccountCrudController
     {
         return self::getService(AccountCrudController::class);
@@ -261,29 +201,20 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
     }
 
     /**
-     * 获取或创建测试用的Account实体
+     * 获取测试用的Account实体
      *
-     * 注意：由于 createAuthenticatedClient() 会清理数据库，
-     * 需要在调用此方法前先调用 createAuthenticatedClient()，
-     * 然后此方法会重新创建测试数据
+     * 从 DataFixtures 加载的数据中获取账号
+     * cleanDatabase() 会自动加载 AccountFixtures
      */
-    private function createTestAccount(?KernelBrowser $client = null): Account
+    private function getTestAccount(): Account
     {
-        if (null === $client) {
-            $client = $this->createAuthenticatedClient();
-        }
-
         $em = self::getEntityManager();
 
-        // createAuthenticatedClient() 已经清理了数据库
-        // 重新创建测试数据
-        $this->createBaseTestData();
-
-        // 获取第一个测试账号
-        $account = $em->getRepository(Account::class)->findOneBy(['appId' => 'test-app-id-1']);
+        // 从 fixtures 加载的数据中获取第一个账号
+        $account = $em->getRepository(Account::class)->findOneBy([]);
 
         if (null === $account) {
-            throw new \RuntimeException('Test account not found after createBaseTestData().');
+            throw new \RuntimeException('No test account found. Ensure AccountFixtures is loaded.');
         }
 
         return $account;
@@ -295,7 +226,7 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
     public function testIndexPageShouldHaveData(): void
     {
         $client = $this->createAuthenticatedClient();
-        $account = $this->createTestAccount();
+        $account = $this->getTestAccount();
 
         // 访问索引页面
         $crawler = $client->request('GET', $this->generateAdminUrl('index'));
@@ -324,24 +255,12 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
     }
 
     /**
-     * 跳过基类的测试IndexRowActionLinksShouldWork
+     * 跳过基类的测试 IndexRowActionLinksShouldWork
      *
-     * ⚠️ 已知问题：基类的 testIndexRowActionLinksShouldNotReturn500 测试会失败
-     *
-     * 根本原因：
-     * 1. 使用了 #[RunTestsInSeparateProcesses] 注解，每个测试在独立进程中运行
-     * 2. 基类的 createAuthenticatedClient() 是 final 方法，会清理数据库
-     * 3. afterEasyAdminSetUp() 在 setUp 中创建的数据会被 createAuthenticatedClient() 清除
-     * 4. 基类测试无法访问子类的数据创建方法，导致测试时数据不存在
-     *
-     * 替代验证：
-     * - testIndexPageShouldHaveData 方法已经验证了相同的功能
-     * - 该测试在 createAuthenticatedClient() 后重新创建数据，因此能正常工作
-     *
-     * 如果需要修复，需要：
-     * 1. 移除 #[RunTestsInSeparateProcesses]（可能引入其他问题）
-     * 2. 修改基类测试框架（不可行）
-     * 3. 接受此限制，依赖子类测试验证功能
+     * ⚠️ Known Issue: 基类测试 testIndexRowActionLinksShouldNotReturn500 会因框架设计缺陷失败
+     * - 原因: #[RunTestsInSeparateProcesses] + 基类 final 方法 + 数据清理时序冲突
+     * - 替代验证: testIndexPageShouldHaveData 提供等效功能测试
+     * - 参考: 提交信息中有详细分析
      */
     public function testIndexRowActionLinksShouldWork(): void
     {
