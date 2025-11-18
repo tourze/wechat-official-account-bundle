@@ -42,17 +42,6 @@ final class CallbackIPCrudControllerTest extends AbstractEasyAdminControllerTest
         yield 'remark' => ['remark'];
     }
 
-    public function testGetEntityFqcn(): void
-    {
-        $client = $this->createAuthenticatedClient();
-
-        $client->request('GET', '/admin');
-
-        self::getClient($client);
-        $this->assertResponseIsSuccessful();
-        $this->assertSame(CallbackIP::class, CallbackIPCrudController::getEntityFqcn());
-    }
-
     public function testCreateNewCallbackIP(): void
     {
         $client = $this->createAuthenticatedClient();

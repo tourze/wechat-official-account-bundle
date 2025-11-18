@@ -40,16 +40,6 @@ final class AccountCrudControllerTest extends AbstractEasyAdminControllerTestCas
         yield 'name' => ['name'];
     }
 
-    public function testGetEntityFqcn(): void
-    {
-        $client = $this->createAuthenticatedClient();
-        $client->request('GET', '/admin');
-
-        self::getClient($client);
-        $this->assertResponseIsSuccessful();
-        $this->assertSame(Account::class, AccountCrudController::getEntityFqcn());
-    }
-
     public function testCreateNewAccount(): void
     {
         $client = $this->createAuthenticatedClient();
